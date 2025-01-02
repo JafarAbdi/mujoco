@@ -431,6 +431,56 @@ TEST_F(MujocoTest, RecompileFails) {
   mj_deleteSpec(spec);
 }
 
+TEST_F(MujocoTest, RecompileQpos) {
+  static constexpr char xml[] = R"(
+  <mujoco>
+    <worldbody>
+      <body name="body">
+        <joint type="slide" axis="0 0 1"/>
+        <geom size=".2"/>
+      </body>
+    </worldbody>
+  </mujoco>)";
+
+  static constexpr char child_xml[] = R"(
+  <mujoco>
+    <worldbody>
+      <body name="body">
+        <joint name="hola" type="slide" axis="0 0 1"/>
+        <geom size=".2"/>
+      </body>
+    </worldbody>
+    <keyframe>
+      <key name="home" qpos="2" ctrl="0"/>
+    </keyframe>
+  </mujoco>)";
+
+  mjSpec *spec = mj_parseXMLString(xml, 0, nullptr, 0);
+  EXPECT_THAT(spec, NotNull());
+  // mjModel *model = mj_compile(spec, 0); // Works
+  mjModel *model = LoadModelFromString(xml); // Fails
+  EXPECT_THAT(model, NotNull());
+  mjData *data = mj_makeData(model);
+  EXPECT_THAT(data, NotNull());
+  data->qpos[0] = 1;
+
+  mjSpec *child = mj_parseXMLString(xml, 0, nullptr, 0);
+  EXPECT_THAT(child, NotNull());
+  mjs_attachToSite(mjs_addSite(mjs_findBody(spec, "world"), 0),
+                   mjs_findBody(child, "body"), "child-", "");
+
+  std::cout << "Before: " << model->nq << std::endl;
+  EXPECT_EQ(mj_recompile(spec, 0, model, data), 0);
+  std::cout << "After: " << model->nq << std::endl;
+  std::cout << data->qpos[0] << " " << data->qpos[1] << std::endl;
+  EXPECT_EQ(data->qpos[0], 1);
+
+  mj_deleteSpec(spec);
+  mj_deleteSpec(child);
+  mj_deleteModel(model);
+  mj_deleteData(data);
+}
+
 // ------------------- test recompilation multiple files -----------------------
 TEST_F(PluginTest, RecompileCompare) {
   mjtNum tol = 0;
