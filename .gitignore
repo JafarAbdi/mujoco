@@ -37,3 +37,7 @@ MUJOCO_LOG.TXT
 
 # Clang cache
 .cache/
+
+# pixi environments
+.pixi
+*.egg-info

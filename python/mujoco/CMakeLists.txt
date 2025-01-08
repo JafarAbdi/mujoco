@@ -49,6 +49,8 @@ elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Cl
   add_compile_options(-fdata-sections -ffunction-sections)
 endif()
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../cmake")
+
 include(MujocoLinkOptions)
 get_mujoco_extra_link_options(EXTRA_LINK_OPTIONS)
 add_link_options(${EXTRA_LINK_OPTIONS})
